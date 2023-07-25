@@ -1,6 +1,8 @@
+const uuid = require('../helpers/uuid');
+
 [
     {
-        "title":"Test Title",
-        "text":"Test text"
+        "title": "Test Title",
+        "text": "Test text"
     }
 ]
