@@ -1,5 +1,3 @@
-const uuid = require('../helpers/uuid');
-
 [
     {
         "title": "Test Title",

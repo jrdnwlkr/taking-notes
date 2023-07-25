@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const uuid = require('./helpers/uuid');
 const notes = require('./db/notes');
+const fs = require('fs');
 
 // Import built-in Node.js package 'path' to resolve path of files that are located on the server
 // const path = require('path');
@@ -48,6 +49,14 @@ app.post('/api/notes', (req, res) => {
             text,
             review_id: uuid()
         };
+
+        const noteString = JSON.stringify(newNote);
+
+        const notes = JSON.parse(fs.readFileSync("./db/notes.json", "utf-8"));
+
+        notes.push(newNote)
+
+        fs.writeFileSync("./db/notes.json", JSON.stringify(notes))
 
         const response = {
             status: 'success',
