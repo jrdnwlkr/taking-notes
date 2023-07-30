@@ -45,7 +45,7 @@ app.post('/api/notes', (req, res) => {
     const newNote = {
       title,
       text,
-      review_id: uuid(),
+      note_id: uuid(),
     };
 
     fs.readFile(notesFile, 'utf-8', (err, data) => {

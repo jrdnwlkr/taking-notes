@@ -63,21 +63,21 @@ const getNotes = () =>
     console.error('Error in POST request:', error);
   });
 
-const renderActiveNote = () => {
-  hide(saveNoteBtn);
-
-  if (activeNote.id) {
-    noteTitle.setAttribute('readonly', true);
-    noteText.setAttribute('readonly', true);
-    noteTitle.value = activeNote.title;
-    noteText.value = activeNote.text;
-  } else {
-    noteTitle.removeAttribute('readonly');
-    noteText.removeAttribute('readonly');
-    noteTitle.value = '';
-    noteText.value = '';
-  }
-};
+  const renderActiveNote = () => {
+    hide(saveNoteBtn);
+  
+    if (activeNote.note_id) {
+      noteTitle.setAttribute('readonly', true);
+      noteText.setAttribute('readonly', true);
+      noteTitle.value = activeNote.title;
+      noteText.value = activeNote.text;
+    } else {
+      noteTitle.removeAttribute('readonly');
+      noteText.removeAttribute('readonly');
+      noteTitle.value = '';
+      noteText.value = '';
+    }
+  };
 
 const handleNoteSave = () => {
   const newNote = {
@@ -112,8 +112,13 @@ const handleNoteDelete = (e) => {
 // Sets the activeNote and displays it
 const handleNoteView = (e) => {
   e.preventDefault();
-  activeNote = JSON.parse(e.target.parentElement.getAttribute('data-note'));
+  const selectedNote = JSON.parse(e.target.parentElement.getAttribute('data-note'));
+  setActiveNote(selectedNote);
   renderActiveNote();
+};
+
+const setActiveNote = (note) => {
+  activeNote = note;
 };
 
 // Sets the activeNote to and empty object and allows the user to enter a new note
