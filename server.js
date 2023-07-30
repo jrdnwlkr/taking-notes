@@ -1,76 +1,82 @@
-// Import Express.js
 const express = require('express');
 const path = require('path');
 const uuid = require('./helpers/uuid');
-const notes = require('./db/notes');
 const fs = require('fs');
+const notesFile = path.join(__dirname, 'db', 'notes.json');
 
-// Import built-in Node.js package 'path' to resolve path of files that are located on the server
-// const path = require('path');
 const PORT = 3001;
-// Initialize an instance of Express.js
+
 const app = express();
-
-// Specify on which port the Express.js server will run
-
-
-// Static middleware pointing to the public folder
 
 app.use(express.json());
 
-// app.use(bodyParser.json()) // for parsing application/json
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static('public'));
 
-// Create Express.js routes for default '/', '/send' and '/routes' endpoints
 app.get('/', (req, res) => res.send('Navigate to /send or /routes'));
 
 app.get('/api/notes', (req, res) => {
-  res.status(200).json(notes);
+  fs.readFile(notesFile, 'utf-8', (err, data) => {
+    if (err) {
+      console.error('Error reading notes file:', err);
+      return res.status(500).json('Error fetching notes');
+    }
+
+    const notes = JSON.parse(data);
+    res.status(200).json(notes);
+  });
 });
 
-// app.get('/send', (req, res) =>
-//   res.sendFile(path.join(__dirname, 'public/sendFile.html'))
-// );
+app.get('/send', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public/sendFile.html'))
+);
 
 app.get('/notes', (req, res) =>
   res.sendFile(path.join(__dirname, 'public/notes.html'))
 );
 
 app.post('/api/notes', (req, res) => {
-    console.info(`${req.method} request received to add a note`);
+  console.info(`${req.method} request received to add a note`);
 
-    const { title, text } = req.body;
+  const { title, text } = req.body;
 
-    if ( title && text ) {
-        const newNote = {
-            title,
-            text,
-            review_id: uuid()
-        };
+  if (title && text) {
+    const newNote = {
+      title,
+      text,
+      review_id: uuid(),
+    };
 
-        const noteString = JSON.stringify(newNote);
+    fs.readFile(notesFile, 'utf-8', (err, data) => {
+      if (err) {
+        console.error('Error reading notes file:', err);
+        return res.status(500).json('Error in posting note');
+      }
 
-        const notes = JSON.parse(fs.readFileSync("./db/notes.json", "utf-8"));
+      const notes = JSON.parse(data);
+      notes.push(newNote);
 
-        notes.push(newNote)
-
-        fs.writeFileSync("./db/notes.json", JSON.stringify(notes))
+      fs.writeFile(notesFile, JSON.stringify(notes, null, 4), (err) => {
+        if (err) {
+          console.error('Error writing notes file:', err);
+          return res.status(500).json('Error in posting note');
+        }
 
         const response = {
-            status: 'success',
-            body: newNote,
-          };
+          status: 'success',
+          body: newNote,
+        };
 
         console.log(response);
-          res.status(201).json(response);
-        } else {
-          res.status(500).json('Error in posting note');
-        }
+        res.status(201).json(response);
+      });
+    });
+  } else {
+    res.status(500).json('Error in posting note');
+  }
 });
 
-// listen() method is responsible for listening for incoming connections on the specified port 
 app.listen(PORT, () =>
   console.log(`Example app listening at http://localhost:${PORT}`)
 );

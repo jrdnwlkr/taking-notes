@@ -31,9 +31,19 @@ const getNotes = () =>
     headers: {
       'Content-Type': 'application/json',
     },
+  })
+  .then((res) => {
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.json();
+  })
+  .catch((error) => {
+    console.error('Error fetching notes:', error);
+    return []; // Return an empty array in case of an error
   });
 
-const saveNote = (note) =>
+  const saveNote = (note) =>
   fetch('/api/notes', {
     method: 'POST',
     headers: {
@@ -41,21 +51,16 @@ const saveNote = (note) =>
     },
     body: JSON.stringify(note),
   })
-  .then((res) => res.json())
-    .then((data) => {
-      console.log('Successful POST request:', data);
-      return data;
-    })
-    .catch((error) => {
-      console.error('Error in POST request:', error);
-    });
-
-const deleteNote = (id) =>
-  fetch(`/api/notes/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+  .then((res) => {
+    console.log('Response status:', res.status);
+    return res.json();
+  })
+  .then((data) => {
+    console.log('Successful POST request:', data);
+    return data;
+  })
+  .catch((error) => {
+    console.error('Error in POST request:', error);
   });
 
 const renderActiveNote = () => {
@@ -80,6 +85,7 @@ const handleNoteSave = () => {
     text: noteText.value,
   };
   saveNote(newNote).then(() => {
+    console.log('Note saved:', newNote);
     getAndRenderNotes();
     renderActiveNote();
   });
@@ -122,13 +128,20 @@ const handleRenderSaveBtn = () => {
   } else {
     show(saveNoteBtn);
   }
+  console.log('Save button visibility:', saveNoteBtn.style.display);
 };
 
 // Render the list of note titles
 const renderNoteList = async (notes) => {
-  let jsonNotes = await notes.json();
-  if (window.location.pathname === '/notes') {
-    noteList.forEach((el) => (el.innerHTML = ''));
+  console.log('Notes to render:', notes);
+  let jsonNotes = notes;
+
+  console.log('Fetched notes:', jsonNotes);
+  console.log('Number of fetched notes:', jsonNotes.length);
+
+  if (!Array.isArray(jsonNotes) || jsonNotes.length === 0) {
+    noteList.forEach((el) => (el.innerHTML = '<li class="list-group-item">No saved Notes</li>'));
+    return;
   }
 
   let noteListItems = [];
@@ -174,12 +187,29 @@ const renderNoteList = async (notes) => {
   });
 
   if (window.location.pathname === '/notes') {
-    noteListItems.forEach((note) => noteList[0].append(note));
+    // Clear the list before rendering
+    noteList.forEach((el) => (el.innerHTML = ''));
+
+    // Append the new notes to the 'ul' element with class 'list-group'
+    const noteListUl = document.querySelector('.list-group');
+    noteListItems.forEach((note) => noteListUl.append(note));
   }
 };
 
 // Gets notes from the db and renders them to the sidebar
-const getAndRenderNotes = () => getNotes().then(renderNoteList);
+const getAndRenderNotes = () => {
+  console.log('Fetching notes...');
+  getNotes()
+    .then((notes) => {
+      console.log('Fetched notes:', notes);
+      console.log('Number of fetched notes:', notes.length);
+       renderNoteList(notes);
+    })
+    .catch((error) => {
+      console.error('Error fetching notes:', error);
+      renderNoteList([]); // In case of an error, render an empty list
+    });
+};
 
 if (window.location.pathname === '/notes') {
   saveNoteBtn.addEventListener('click', handleNoteSave);
